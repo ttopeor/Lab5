@@ -90,42 +90,46 @@ public class PokerHub extends Hub {
 
 
 			case Draw:
-
-				HubGamePlay.seteDrawCountLast(eDrawCount.geteDrawCount(HubGamePlay.geteDrawCountLast().getDrawNo()+1));
 				
-				//Gets the new CardDraw from gameplay's rule
-				CardDraw draw = HubGamePlay.getRule().GetDrawCard(HubGamePlay.geteDrawCountLast());
+				eDrawCount cot = HubGamePlay.geteDrawCountLast();
+				HubGamePlay.seteDrawCountLast(eDrawCount.geteDrawCount(cot.getDrawNo()+1));
 				
-				//If Draw to be sent to Players...
-				if(draw.getCardDestination()==eCardDestination.Player){
-					//Get order from HubGamePlay
-					for(int x:HubGamePlay.getiActOrder()){
-						//Get Players currently sitting
-						for(Player p:HubPokerTable.getHmPlayer().values()){
-							//If PlayerPosition equals order#
-							if(x==p.getiPlayerPosition()){
-								//Draw cards for players, dependent on count value from CardDraw
-								for(int i=0;i<draw.getCardCount().getCardCount();i++){
-									HubGamePlay.drawCard(p, eCardDestination.Player);
+				cot = HubGamePlay.geteDrawCountLast();
+				CardDraw cd = HubGamePlay.getRule().GetDrawCard(cot);
+				
+				switch(cd.getCardDestination()){
+					case Player:
+						for(int order:HubGamePlay.getiActOrder()){
+							
+							for(Player plyr:HubPokerTable.getHmPlayer().values()){
+								
+								if(order==plyr.getiPlayerPosition()){
+									
+									for(int i=0;i<cd.getCardCount().getCardCount();i++){
+										
+										HubGamePlay.drawCard(plyr, eCardDestination.Player);
+									}
 								}
 							}
 						}
-					}
-				}
-				//Else drawn cards should be sent to common hand... # of cards dependent on count value from CardDraw
-				else{
-					for(int i=0;i<draw.getCardCount().getCardCount();i++){
-						HubGamePlay.drawCard(new Player(), eCardDestination.Community);
-					}
+						break;
+					default:
+						for(int i=0;i<cd.getCardCount().getCardCount();i++){
+							HubGamePlay.drawCard(new Player(), eCardDestination.Community);
+						}
+						break;
+				
 				}
 				
+				int currentDraw = HubGamePlay.geteDrawCountLast().getDrawNo();
+				int maxDraw = HubGamePlay.getRule().GetMaxDrawCount();
 				
-				if(HubGamePlay.geteDrawCountLast().getDrawNo()==HubGamePlay.getRule().GetMaxDrawCount()){
+				if(currentDraw==maxDraw){
 					HubGamePlay.isGameOver();
 				}
 				
 				resetOutput();
-				//	Send the state of the gameplay back to the clients
+				
 				sendToAll(HubGamePlay);
 				break;
 			
